@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>For Kinsey 💙</title>
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+<!-- Theme colors for PWA -->
+<meta name="theme-color" content="#ff55aa">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&family=Pacifico&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow:hidden;width:100%;height:100%;background:#080c18;font-family:"Quicksand",sans-serif;cursor:none}
+canvas{display:block;position:fixed;inset:0;z-index:0}
+
+#cursor{position:fixed;width:20px;height:20px;border:2px solid rgba(255,180,230,0.85);border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);z-index:9999;mix-blend-mode:screen}
+
+/* ════ SCREENS ════ */
+.screen{position:fixed;inset:0;z-index:2000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .55s}
+.screen.active{opacity:1;pointer-events:auto}
+.menu-card{background:linear-gradient(155deg,#0c1030,#1a0b28);border:1px solid rgba(255,180,230,0.3);border-radius:30px;padding:36px 40px 32px;max-width:min(540px,94vw);width:100%;text-align:center;box-shadow:0 0 80px rgba(130,70,200,0.22),0 30px 80px rgba(0,0,0,0.82);position:relative;overflow:hidden}
+.menu-card::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,130,215,0.07),transparent 60%);pointer-events:none}
+.menu-title{font-family:"Pacifico",cursive;font-size:clamp(26px,5vw,42px);color:#ffd6f5;text-shadow:0 0 28px #ff66bb,0 0 55px #aa33dd;margin-bottom:5px;line-height:1.22}
+.menu-sub{font-size:13px;color:rgba(255,200,230,0.5);font-style:italic;margin-bottom:22px;font-family:"Lora",serif}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,180,230,0.25),transparent);margin:18px 0}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:"Quicksand",sans-serif;font-weight:700;font-size:14px;letter-spacing:.06em;padding:12px 32px;border-radius:50px;border:none;cursor:pointer;transition:transform .14s,box-shadow .14s;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,#ff55aa,#9933ee);color:#fff;box-shadow:0 4px 20px rgba(255,80,160,0.42)}
+.btn-primary:hover{transform:scale(1.05);box-shadow:0 6px 30px rgba(255,80,160,0.65)}
+.btn-gold{background:linear-gradient(135deg,#e8a800,#c47000);color:#fff;box-shadow:0 4px 20px rgba(220,150,0,0.42)}
+.btn-gold:hover{transform:scale(1.05);box-shadow:0 6px 30px rgba(220,150,0,0.6)}
+.btn-secondary{background:rgba(255,255,255,0.06);color:rgba(255,200,230,0.82);border:1px solid rgba(255,180,230,0.22)}
+.btn-secondary:hover{background:rgba(255,255,255,0.11);border-color:rgba(255,180,230,0.48)}
+.btn-danger{background:linear-gradient(135deg,#cc2244,#881133);color:#fff;box-shadow:0 4px 16px rgba(200,30,70,0.34)}
+.btn-danger:hover{transform:scale(1.04);box-shadow:0 6px 24px rgba(200,30,70,0.55)}
+.btn-sm{padding:8px 22px;font-size:12px}
+.btn-full{width:100%;margin-top:10px}
+
+/* cat picker */
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+.cat-option{background:rgba(255,255,255,0.04);border:2px solid rgba(255,180,230,0.16);border-radius:18px;padding:16px 10px 12px;cursor:pointer;transition:all .2s;position:relative}
+.cat-option:hover{background:rgba(255,80,160,0.07);border-color:rgba(255,180,230,0.42)}
+.cat-option.selected{background:rgba(255,80,160,0.11);border-color:#ff88cc;box-shadow:0 0 18px rgba(255,100,180,0.28)}
+.cat-option.locked{opacity:0.45;cursor:default}
+.cat-option.locked:hover{background:rgba(255,255,255,0.04);border-color:rgba(255,180,230,0.16)}
+.cat-option .cat-preview{font-size:44px;display:block;margin-bottom:7px;line-height:1}
+.cat-option .cat-name{font-family:"Pacifico",cursive;font-size:15px;color:#ffd6f5;display:block;margin-bottom:2px}
+.cat-option .cat-desc{font-size:10px;color:rgba(255,200,230,0.48);font-style:italic}
+.cat-option .check{position:absolute;top:9px;right:11px;font-size:14px;opacity:0;transition:opacity .2s}
+.cat-option.selected .check{opacity:1}
+.cat-option .lock-badge{position:absolute;top:8px;right:10px;font-size:13px}
+.cat-option.secret-unlocked{border-color:rgba(255,215,80,0.6);box-shadow:0 0 22px rgba(255,180,30,0.35),0 0 44px rgba(200,130,255,0.15)}
+
+/* ════ HUD ════ */
+#hud{position:fixed;top:14px;left:0;right:0;display:flex;justify-content:center;gap:9px;pointer-events:none;z-index:300;flex-wrap:wrap;padding:0 110px 0 14px}
+.hud-box{background:rgba(8,12,30,0.8);border:1px solid rgba(255,180,230,0.18);border-radius:30px;padding:5px 14px;color:#ffb4e6;font-size:12px;font-weight:700;letter-spacing:.05em;display:flex;align-items:center;gap:4px}
+.hud-box .val{color:#fff;font-size:14px}
+
+/* icon buttons top-right */
+#iconBar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:301}
+.icon-btn{background:rgba(8,12,30,0.82);border:1px solid rgba(255,180,230,0.26);border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;transition:box-shadow .18s,border-color .18s;pointer-events:auto}
+.icon-btn:hover{box-shadow:0 0 16px rgba(255,100,180,0.38);border-color:rgba(255,180,230,0.6)}
+
+/* ════ PAUSE OVERLAY ════ */
+#pauseOverlay{position:fixed;inset:0;z-index:1800;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s}
+#pauseOverlay.show{opacity:1;pointer-events:auto}
+#pauseOverlay .pback{position:absolute;inset:0;background:rgba(4,6,18,0.78)}
+#pauseOverlay .pcard{position:relative;background:linear-gradient(155deg,#0c1030,#1a0b28);border:1px solid rgba(255,180,230,0.3);border-radius:28px;padding:40px 48px;max-width:min(380px,88vw);width:100%;text-align:center;box-shadow:0 0 60px rgba(130,70,200,0.22),0 20px 60px rgba(0,0,0,0.8)}
+#pauseOverlay h2{font-family:"Pacifico",cursive;color:#ffd6f5;font-size:30px;margin-bottom:6px;text-shadow:0 0 20px #ff66bb}
+#pauseOverlay p{font-size:13px;color:rgba(255,200,230,0.5);font-family:"Lora",serif;font-style:italic;margin-bottom:28px}
+
+/* ════ PANELS ════ */
+.panel-overlay{position:fixed;inset:0;z-index:1600;opacity:0;pointer-events:none;transition:opacity .38s;display:flex;align-items:center;justify-content:center}
+.panel-overlay.show{opacity:1;pointer-events:auto}
+.panel-back{position:absolute;inset:0;background:rgba(4,6,18,0.86)}
+.panel-box{position:relative;background:linear-gradient(155deg,#0c102a,#180b24);border:1px solid rgba(255,180,230,0.26);border-radius:26px;padding:26px 22px;width:min(640px,94vw);max-height:86vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.8)}
+.panel-box::-webkit-scrollbar{width:4px}
+.panel-box::-webkit-scrollbar-thumb{background:rgba(255,180,230,0.28);border-radius:4px}
+.panel-h{font-family:"Pacifico",cursive;color:#ffd6f5;font-size:21px;text-align:center;margin-bottom:4px;text-shadow:0 0 16px #ff77bb}
+.panel-sub{text-align:center;font-size:12px;color:rgba(255,200,230,0.42);margin-bottom:18px;font-style:italic;font-family:"Lora",serif}
+
+/* journal tabs */
+.j-tabs{display:flex;gap:6px;margin-bottom:18px;justify-content:center;flex-wrap:wrap}
+.j-tab{background:rgba(255,255,255,0.05);border:1px solid rgba(255,180,230,0.18);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:700;color:rgba(255,200,230,0.55);cursor:pointer;transition:all .2s}
+.j-tab.active{background:rgba(255,80,160,0.14);border-color:rgba(255,180,230,0.5);color:#ffd6f5}
+.j-tab.gold-tab.active{background:rgba(255,190,30,0.12);border-color:rgba(255,215,80,0.55);color:#ffd700}
+.j-tab.teal-tab.active{background:rgba(50,200,180,0.12);border-color:rgba(80,220,200,0.5);color:#80ffe8}
+.j-section{display:none}.j-section.active{display:block}
+.j-progress{text-align:center;font-size:13px;color:#ffb4e6;font-weight:700;margin-bottom:14px}
+.jgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:7px}
+.jnote{background:rgba(255,255,255,0.04);border:1px solid rgba(255,180,230,0.1);border-radius:12px;padding:9px 7px;text-align:center;font-size:11px;color:rgba(255,200,230,0.3);cursor:default;transition:all .18s}
+.jnote.found{background:rgba(255,80,160,0.07);border-color:rgba(255,180,230,0.34);color:#ffe8f8;cursor:pointer}
+.jnote.found:hover{background:rgba(255,80,160,0.13)}
+.jnote.gold{border-color:rgba(255,210,80,0.14)}
+.jnote.gold.found{background:rgba(255,190,40,0.09);border-color:rgba(255,210,80,0.55);color:#fff8e0}
+.jnote.gold.found:hover{background:rgba(255,190,40,0.16)}
+.jnote .jicon{font-size:17px;display:block;margin-bottom:3px}
+.jnote .jtitle{font-size:10px;line-height:1.35}
+.j-section-label{font-family:"Pacifico",cursive;font-size:13px;color:#ffb4e6;margin:14px 0 9px;text-align:center}
+.j-section-label.gold-label{color:#ffd700;text-shadow:0 0 12px rgba(255,200,50,0.4)}
+
+/* Kinsey's Thoughts */
+#thoughtsSection{padding:4px 0}
+.thought-entry{background:rgba(255,255,255,0.04);border:1px solid rgba(80,220,200,0.2);border-radius:14px;padding:14px 16px;margin-bottom:10px;text-align:left}
+.thought-entry .te-date{font-size:10px;color:rgba(80,220,200,0.55);font-family:"Lora",serif;font-style:italic;margin-bottom:6px}
+.thought-entry .te-text{font-size:13px;color:rgba(255,240,240,0.82);line-height:1.65;font-family:"Lora",serif}
+.thought-empty{text-align:center;font-size:13px;color:rgba(255,200,230,0.35);font-family:"Lora",serif;font-style:italic;padding:24px 0}
+
+/* settings */
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid rgba(255,180,230,0.09)}
+.settings-row:last-child{border-bottom:none}
+.settings-row .slabel{font-size:14px;color:#ffe8f8;font-weight:600}
+.settings-row .sdesc{font-size:11px;color:rgba(255,200,230,0.42);margin-top:1px}
+.settings-right{flex-shrink:0;margin-left:14px}
+.danger-zone{margin-top:18px;padding:16px;background:rgba(200,30,60,0.06);border:1px solid rgba(200,50,70,0.22);border-radius:14px}
+.danger-zone h4{color:#ff6688;font-size:12px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+
+/* ════ NOTE MODAL ════ */
+#noteModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:1500;opacity:0;pointer-events:none;transition:opacity .45s}
+#noteModal.show{opacity:1;pointer-events:auto}
+#noteModal .backdrop{position:absolute;inset:0;background:rgba(4,6,18,0.84)}
+#noteModal .card{position:relative;border-radius:26px;padding:32px 38px 26px;max-width:min(490px,90vw);width:100%;text-align:center;animation:cardIn .48s cubic-bezier(.175,.885,.32,1.275) both}
+#noteModal .card.regular{background:linear-gradient(145deg,#0d1135,#1a0c28);border:1px solid rgba(255,180,230,0.44);box-shadow:0 0 55px rgba(255,80,160,0.22),0 20px 55px rgba(0,0,0,0.75)}
+#noteModal .card.special{background:linear-gradient(145deg,#140e02,#1e1600);border:1px solid rgba(255,210,80,0.52);box-shadow:0 0 75px rgba(255,180,30,0.32),0 20px 65px rgba(0,0,0,0.8)}
+@keyframes cardIn{from{transform:scale(0.86) translateY(18px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+.from-heaven{font-family:"Pacifico",cursive;font-size:13px;color:#ffd700;letter-spacing:.08em;margin-bottom:12px;text-shadow:0 0 14px rgba(255,200,50,0.55)}
+.note-num{font-family:"Lora",serif;font-style:italic;font-size:11px;letter-spacing:.11em;text-transform:uppercase;margin-bottom:13px}
+.card.regular .note-num{color:rgba(255,180,230,0.48)}
+.card.special .note-num{color:rgba(255,210,80,0.58)}
+.note-icon{font-size:30px;display:block;margin-bottom:10px}
+.note-body{font-family:"Lora",serif;font-size:clamp(13px,2.1vw,17px);line-height:1.82;margin-bottom:16px}
+.card.regular .note-body{color:#ffe8f8}
+.card.special .note-body{color:#fff8e8}
+.note-verse{font-family:"Lora",serif;font-style:italic;font-size:clamp(10px,1.6vw,12px);border-top:1px solid;padding-top:12px;line-height:1.62}
+.card.regular .note-verse{color:rgba(255,200,230,0.52);border-color:rgba(255,180,230,0.16)}
+.card.special .note-verse{color:rgba(255,220,120,0.62);border-color:rgba(255,210,80,0.18)}
+.close-btn{margin-top:16px;display:inline-block;color:#fff;font-family:"Quicksand",sans-serif;font-weight:700;font-size:13px;padding:10px 28px;border-radius:50px;cursor:pointer;border:none;letter-spacing:.05em;transition:transform .14s}
+.card.regular .close-btn{background:linear-gradient(135deg,#ff55aa,#9933ee);box-shadow:0 4px 16px rgba(255,80,160,0.38)}
+.card.special .close-btn{background:linear-gradient(135deg,#e8a800,#c47000);box-shadow:0 4px 16px rgba(220,150,0,0.42)}
+.close-btn:hover{transform:scale(1.05)}
+
+/* ════ MEMORY CARD ════ */
+#memoryCard{position:fixed;bottom:50px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(8,10,28,0.93);border:1px solid rgba(255,180,230,0.34);border-radius:21px;padding:12px 24px;max-width:min(440px,92vw);text-align:center;opacity:0;pointer-events:none;transition:opacity .48s,transform .48s;z-index:400;box-shadow:0 0 24px rgba(255,100,180,0.18),0 6px 18px rgba(0,0,0,0.58)}
+#memoryCard.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#memoryCard .mc-msg{font-family:"Pacifico",cursive;font-size:clamp(13px,2vw,18px);color:#ffd6f5;line-height:1.5;text-shadow:0 0 14px #ff77bb}
+#memoryCard .mc-hearts{margin-top:5px;font-size:15px;animation:pulse 1.3s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.22)}}
+
+/* ════ COMBO ════ */
+#combo{position:fixed;top:65px;left:50%;transform:translateX(-50%);font-family:"Pacifico",cursive;font-size:34px;color:#ffd6f5;pointer-events:none;opacity:0;text-shadow:0 0 26px #ff55aa,0 0 50px #ff22aa;transition:opacity .28s;z-index:300;white-space:nowrap}
+#combo.show{opacity:1}
+
+/* ════ STREAK PIPS ════ */
+#streakBar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:none;z-index:300}
+.streak-pip{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,180,230,0.2);transition:background .28s,box-shadow .28s}
+.streak-pip.lit{background:#ffb4e6;box-shadow:0 0 8px #ff88cc}
+
+/* ════ FINALE OVERLAY ════ */
+#finaleOverlay{position:fixed;inset:0;z-index:1900;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;opacity:0;pointer-events:none;transition:opacity 1.2s}
+#finaleOverlay.show{opacity:1;pointer-events:auto}
+#finaleOverlay .fback{position:absolute;inset:0;background:rgba(4,6,18,0.6)}
+#finaleOverlay .fcontent{position:relative;z-index:1}
+#finaleOverlay h1{font-family:"Pacifico",cursive;font-size:clamp(22px,4.5vw,44px);color:#ffd6f5;text-shadow:0 0 40px #ff66bb,0 0 80px #aa33dd;line-height:1.3;margin-bottom:16px}
+#finaleOverlay p{font-family:"Lora",serif;font-style:italic;font-size:clamp(14px,2vw,18px);color:rgba(255,220,240,0.75);margin-bottom:28px;line-height:1.7}
+#finaleOverlay .secret-reveal{font-size:clamp(13px,1.8vw,16px);color:#ffd700;font-family:"Pacifico",cursive;text-shadow:0 0 20px rgba(255,200,50,0.6);margin-bottom:22px}
+
+/* ════ BOTTLE MODAL ════ */
+#bottleModal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:1500;opacity:0;pointer-events:none;transition:opacity .45s}
+#bottleModal.show{opacity:1;pointer-events:auto}
+#bottleModal .backdrop{position:absolute;inset:0;background:rgba(4,6,18,0.84)}
+#bottleModal .bcard{position:relative;background:linear-gradient(145deg,#050f1a,#0a1828);border:1px solid rgba(80,200,220,0.4);border-radius:26px;padding:30px 36px 26px;max-width:min(480px,90vw);width:100%;text-align:center;box-shadow:0 0 60px rgba(50,180,220,0.2),0 20px 55px rgba(0,0,0,0.8);animation:cardIn .48s cubic-bezier(.175,.885,.32,1.275) both}
+#bottleModal h3{font-family:"Pacifico",cursive;color:#80ffe8;font-size:22px;margin-bottom:6px;text-shadow:0 0 20px rgba(80,220,200,0.5)}
+#bottleModal .bsub{font-family:"Lora",serif;font-style:italic;font-size:13px;color:rgba(180,240,235,0.55);margin-bottom:18px;line-height:1.6}
+#bottleModal textarea{width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(80,200,220,0.35);border-radius:14px;color:#e8fff8;font-family:"Lora",serif;font-size:14px;line-height:1.65;padding:14px 16px;resize:vertical;min-height:130px;max-height:240px;outline:none;transition:border-color .2s;cursor:auto}
+#bottleModal textarea:focus{border-color:rgba(80,220,200,0.65)}
+#bottleModal textarea::placeholder{color:rgba(130,220,210,0.35)}
+.bottle-btns{display:flex;gap:10px;margin-top:14px;justify-content:center}
+.btn-teal{background:linear-gradient(135deg,#20a898,#0d7060);color:#fff;box-shadow:0 4px 16px rgba(30,160,140,0.38)}
+.btn-teal:hover{transform:scale(1.04);box-shadow:0 6px 24px rgba(30,160,140,0.55)}
+
+/* ════ CONFIRM ════ */
+#confirmDialog{position:fixed;inset:0;z-index:3500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .28s}
+#confirmDialog.show{opacity:1;pointer-events:auto}
+#confirmDialog .back{position:absolute;inset:0;background:rgba(0,0,0,0.72)}
+#confirmDialog .box{position:relative;background:linear-gradient(145deg,#180508,#2a0810);border:1px solid rgba(220,50,80,0.48);border-radius:22px;padding:30px 34px;max-width:360px;width:90%;text-align:center;box-shadow:0 0 45px rgba(200,30,60,0.26)}
+#confirmDialog h3{font-family:"Pacifico",cursive;color:#ff6688;font-size:21px;margin-bottom:9px}
+#confirmDialog p{color:rgba(255,200,210,0.72);font-size:13px;line-height:1.6;margin-bottom:20px;font-family:"Lora",serif;font-style:italic}
+#confirmDialog .confirm-btns{display:flex;gap:11px;justify-content:center}
+
+/* popup floats */
+.popup{position:fixed;font-size:15px;font-family:"Quicksand",sans-serif;font-weight:700;pointer-events:none;animation:fadeUp 1.55s forwards;z-index:600;white-space:nowrap}
+@keyframes fadeUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-56px) scale(0.86)}}
+</style>
+</head>
+<body>
+<div id="cursor"></div>
+<canvas id="game"></canvas>
+
+<!-- ══ START SCREEN ══ -->
+<div class="screen active" id="startScreen">
+  <div class="menu-card">
+    <div class="menu-title">For Kinsey 💙</div>
+    <div class="menu-sub">a little world made just for you</div>
+    <p style="font-size:13px;color:rgba(255,200,230,0.48);line-height:1.72;font-family:'Lora',serif;font-style:italic;margin-bottom:22px">
+      Float through the stars, catch falling candies,<br>
+      and collect 75 love notes hidden in the sky.<br>
+      Watch for golden letters from above 🌟
+    </p>
+    <button class="btn btn-primary btn-full" id="startBtn" style="font-size:16px;padding:14px">✨ &nbsp;Play</button>
+    <button class="btn btn-secondary btn-full" id="toPickerBtn">🐱 &nbsp;Choose Your Cat</button>
+  </div>
+</div>
+
+<!-- ══ CAT PICKER SCREEN ══ -->
+<div class="screen" id="pickerScreen">
+  <div class="menu-card">
+    <div class="menu-title" style="font-size:clamp(22px,4vw,34px)">Your Cat 🐱</div>
+    <div class="menu-sub">your companion through the stars</div>
+    <div class="cat-grid" id="catGrid"></div>
+    <div id="secretHint" style="font-size:11px;color:rgba(255,215,80,0.45);font-family:'Lora',serif;font-style:italic;margin-bottom:14px;display:none">🌟 Collect all 75 notes to unlock the secret cat</div>
+    <button class="btn btn-primary btn-full" id="pickerDoneBtn">💙 &nbsp;Looks Good!</button>
+    <button class="btn btn-secondary btn-full btn-sm" id="pickerBackBtn">← Back</button>
+  </div>
+</div>
+
+<!-- ══ HUD ══ -->
+<div id="hud">
+  <div class="hud-box">💙 <span class="val" id="scoreVal">0</span></div>
+  <div class="hud-box">💌 <span class="val" id="noteCountVal">0</span>/50</div>
+  <div class="hud-box">🌟 <span class="val" id="specialCountVal">0</span>/25</div>
+  <div class="hud-box">✨ <span class="val" id="memVal">0</span></div>
+  <div class="hud-box">🔥 <span class="val" id="streakVal">0</span></div>
+</div>
+<div id="combo"></div>
+<div id="streakBar"></div>
+
+<div id="iconBar">
+  <div class="icon-btn" id="journalBtn" title="Notes">💌</div>
+  <div class="icon-btn" id="settingsBtn" title="Settings">⚙️</div>
+</div>
+
+<!-- ══ HELP MODAL ══ -->
+<div id="helpModal" class="panel-overlay">
+  <div class="panel-back" id="helpBack"></div>
+  <div class="panel-box" style="max-width:600px;">
+    <div class="panel-h">How to Play & Secrets 💡</div>
+    <div class="panel-sub">everything you need to know about your starry adventure</div>
+    
+    <div style="text-align:left; font-size:13px; color:rgba(255,200,230,0.8); line-height:1.7; margin-bottom:18px;">
+      <div style="font-weight:700; color:#ffb4e6; font-size:14px; margin:12px 0 6px;">🎮 How to Play</div>
+      <p style="margin:0 0 8px;">• Move your mouse to guide your cat through the stars</p>
+      <p style="margin:0 0 8px;">• Catch falling candies to earn points and build a streak</p>
+      <p style="margin:0 0 8px;">• Collect 💌 Love Notes (50 total) drifting through the sky</p>
+      <p style="margin:0 0 8px;">• Watch for rare 🌟 Special Notes from Grandpa (25 total)</p>
+      <p style="margin:0 0 8px;">• Build streaks to see beautiful combo effects!</p>
+      
+      <div style="font-weight:700; color:#ffd700; font-size:14px; margin:16px 0 6px;">🌟 Secrets & Hidden Features</div>
+      <p style="margin:0 0 8px;">• Collect ALL 75 notes to unlock a special secret cat!</p>
+      <p style="margin:0 0 8px;">• Look for the 💌 Message in a Bottle - it appears once per session</p>
+      <p style="margin:0 0 8px;">• Complete the finale to unlock a beautiful surprise ending</p>
+      <p style="margin:0 0 8px;">• Memory candies (special glowing ones) give you extra rewards</p>
+      <p style="margin:0 0 8px;">• Golden streak pips appear at 5, 10, and 15 consecutive catches</p>
+      
+      <div style="font-weight:700; color:#80ffe8; font-size:14px; margin:16px 0 6px;">💙 Tips for Success</div>
+      <p style="margin:0 0 8px;">• Focus on maintaining your streak - it builds combo multipliers</p>
+      <p style="margin:0 0 8px;">• Check the journal to track your progress on all notes</p>
+      <p style="margin:0 0 8px;">• Notes appear more frequently as you play longer</p>
+      <p style="margin:0 0 8px;">• The secret cat has special glowing effects!</p>
+    </div>
+    
+    <button class="btn btn-secondary btn-full" id="helpClose">Got it! ✨</button>
+  </div>
+</div>
+
+<!-- ══ MEMORY CARD ══ -->
+<div id="memoryCard">
+  <div class="mc-msg" id="memCardMsg"></div>
+  <div class="mc-hearts">💙 💙 💙</div>
+</div>
+
+<!-- ══ NOTE MODAL ══ -->
+<div id="noteModal">
+  <div class="backdrop" id="noteBackdrop"></div>
+  <div class="card regular" id="noteCard">
+    <div class="from-heaven" id="fromHeaven" style="display:none">✦ From Heaven, With Love ✦</div>
+    <div class="note-num" id="noteNum"></div>
+    <span class="note-icon" id="noteIcon"></span>
+    <div class="note-body" id="noteBody"></div>
+    <div class="note-verse" id="noteVerse"></div>
+    <button class="close-btn" id="noteClose">Keep Playing 💙</button>
+  </div>
+</div>
+
+<!-- ══ BOTTLE MODAL ══ -->
+<div id="bottleModal">
+  <div class="backdrop" id="bottleBackdrop"></div>
+  <div class="bcard">
+    <h3>💌 A Message in a Bottle</h3>
+    <div class="bsub">Something rare drifted in just for you.<br>Write anything — a thought, a memory, a feeling.<br>It will be saved here, just for you.</div>
+    <textarea id="bottleTextarea" maxlength="600" placeholder="Write something beautiful here, Kinsey..."></textarea>
+    <div style="font-size:10px;color:rgba(80,200,220,0.35);text-align:right;margin-top:4px" id="charCount">0 / 600</div>
+    <div class="bottle-btns">
+      <button class="btn btn-secondary btn-sm" id="bottleSkip">Discard</button>
+      <button class="btn btn-teal btn-sm" id="bottleSave">Save My Thought 💙</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ JOURNAL PANEL ══ -->
+<div class="panel-overlay" id="journalPanel">
+  <div class="panel-back" id="journalBack"></div>
+  <div class="panel-box">
+    <div class="panel-h">Kinsey's Collection</div>
+    <div class="panel-sub">every note collected, every thought saved</div>
+    <div class="j-tabs">
+      <div class="j-tab active" data-tab="jLove">💌 Love Notes</div>
+      <div class="j-tab gold-tab" data-tab="jSpecial">🌟 From Grandpa</div>
+      <div class="j-tab teal-tab" data-tab="jThoughts">💭 My Thoughts</div>
+    </div>
+    <div class="j-section active" id="jLove">
+      <div class="j-progress" id="jprogress">0 / 50 found</div>
+      <div class="jgrid" id="jgrid"></div>
+    </div>
+    <div class="j-section" id="jSpecial">
+      <div class="j-progress" id="jsprogress">0 / 25 found</div>
+      <div class="jgrid" id="jgridSpecial"></div>
+    </div>
+    <div class="j-section" id="jThoughts">
+      <div id="thoughtsSection"></div>
+    </div>
+    <button class="btn btn-secondary btn-full" style="margin-top:18px" id="journalClose">Back to the stars ✨</button>
+  </div>
+</div>
+
+<!-- ══ SETTINGS PANEL ══ -->
+<div class="panel-overlay" id="settingsPanel">
+  <div class="panel-back" id="settingsBack"></div>
+  <div class="panel-box" style="max-width:460px">
+    <div class="panel-h">Settings ⚙️</div>
+    <div class="panel-sub">your preferences, your world</div>
+    <div class="settings-row">
+      <div><div class="slabel">🎵 Music</div><div class="sdesc">Soft background lullaby</div></div>
+      <div class="settings-right"><button class="btn btn-secondary btn-sm" id="toggleMusic">On</button></div>
+    </div>
+    <div class="settings-row">
+      <div><div class="slabel">🔔 Sound Effects</div><div class="sdesc">Chimes when catching things</div></div>
+      <div class="settings-right"><button class="btn btn-secondary btn-sm" id="toggleSfx">On</button></div>
+    </div>
+    <div class="settings-row">
+      <div><div class="slabel">🐱 Change Cat</div><div class="sdesc">Pick a different companion</div></div>
+      <div class="settings-right"><button class="btn btn-secondary btn-sm" id="changeCatBtn">Change</button></div>
+    </div>
+    <div class="divider"></div>
+    <div class="settings-row">
+      <div><div class="slabel">⏸️ Game Status</div><div class="sdesc">Pause or resume gameplay</div></div>
+      <div class="settings-right"><button class="btn btn-secondary btn-sm" id="togglePause">⏸️</button></div>
+    </div>
+    <div class="settings-row">
+      <div><div class="slabel">📖 Help</div><div class="sdesc">How to play and game secrets</div></div>
+      <div class="settings-right"><button class="btn btn-secondary btn-sm" id="helpBtn">💡</button></div>
+    </div>
+    <div class="divider"></div>
+    <div class="danger-zone">
+      <h4>⚠ Danger Zone</h4>
+      <div style="font-size:12px;color:rgba(255,180,180,0.55);margin-bottom:12px;font-family:'Lora',serif;font-style:italic;line-height:1.6">Permanently resets all notes, thoughts, memories, and score. Cannot be undone.</div>
+      <button class="btn btn-danger btn-sm btn-full" id="resetBtn">🗑️ Reset All Progress</button>
+    </div>
+    <button class="btn btn-primary btn-full" style="margin-top:18px" id="settingsClose">▶ Resume ▶</button>
+    <button class="btn btn-secondary btn-full" style="margin-top:8px" id="pauseToMenuBtn">← Back to Menu</button>
+  </div>
+</div>
+
+<!-- ══ FINALE OVERLAY ══ -->
+<div id="finaleOverlay">
+  <div class="fback"></div>
+  <div class="fcontent">
+    <h1>You've Collected All Our Love,<br>Kinsey 💙</h1>
+    <p>Every note has been found.<br>Every word of love has reached you.<br>And it will never, ever stop.</p>
+    <div class="secret-reveal" id="secretReveal" style="display:none">🌟 A Secret Cat has been unlocked in the picker 🌟</div>
+    <button class="btn btn-gold" id="finaleClose" style="font-size:16px;padding:14px 40px">Continue 💙</button>
+  </div>
+</div>
+
+<!-- ══ CONFIRM RESET ══ -->
+<div id="confirmDialog">
+  <div class="back"></div>
+  <div class="box">
+    <h3>Are You Sure?</h3>
+    <p>All 75 notes, your thoughts, your score — everything will be gone forever.</p>
+    <div class="confirm-btns">
+      <button class="btn btn-secondary btn-sm" id="confirmNo">Cancel</button>
+      <button class="btn btn-danger btn-sm" id="confirmYes">Yes, Reset</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  DATA — CAT DEFINITIONS
+// ══════════════════════════════════════════════════
+const CATS = [
+  {id:"moo",name:"Moo",desc:"ginger & black • a little wild",preview:"🐱",
+   body:"#e07840",ear:"#c05820",innerEar:"rgba(255,175,120,0.6)",tail:"#b04810",
+   eye:"#1e0e00",nose:"#ff5522",whisker:"rgba(255,195,140,0.6)",
+   glow:"rgba(255,130,60,0.22)",shadow:"#c05010",
+   markings:[{type:"blob",x:-0.28,y:-0.62,rx:0.55,ry:0.52,color:"#141008",r:-0.28}]},
+  {id:"baby",name:"Baby",desc:"black & white • soft as snow",preview:"🐱",
+   body:"#eaeaf2",ear:"#c8c8d8",innerEar:"rgba(255,195,215,0.55)",tail:"#28283c",
+   eye:"#080810",nose:"#ff88aa",whisker:"rgba(60,60,80,0.48)",
+   glow:"rgba(200,200,255,0.16)",shadow:"#9898b8",
+   markings:[{type:"blob",x:0,y:-0.3,rx:1.05,ry:0.9,color:"#141418",r:0},{type:"blob",x:0,y:0.6,rx:0.7,ry:0.55,color:"#eaeaf2",r:0}]},
+  {id:"luna",name:"Luna",desc:"midnight blue • mysterious",preview:"🐱",
+   body:"#2a3a6e",ear:"#1e2c56",innerEar:"rgba(180,155,255,0.52)",tail:"#1a2550",
+   eye:"#aa66ff",nose:"#cc88ff",whisker:"rgba(180,180,255,0.52)",
+   glow:"rgba(100,80,255,0.22)",shadow:"#4455cc",
+   markings:[{type:"star",x:-0.1,y:-0.28,size:0.16,color:"rgba(255,220,100,0.72)"}]},
+  {id:"peach",name:"Peach",desc:"creamy & fluffy • full of love",preview:"🐱",
+   body:"#f5c898",ear:"#e8a870",innerEar:"rgba(255,178,188,0.58)",tail:"#e8a060",
+   eye:"#3a1a00",nose:"#ff9aaa",whisker:"rgba(200,140,80,0.52)",
+   glow:"rgba(255,178,100,0.2)",shadow:"#d09050",
+   markings:[{type:"stripe",color:"rgba(195,115,45,0.32)"}]},
+  // SECRET — unlocked when all 75 notes collected
+  {id:"angel",name:"Kinsey's Heart",desc:"guardian angel • glowing with love",preview:"🌟",secret:true,
+   body:"#e8d8ff",ear:"#c8a8f0",innerEar:"rgba(255,230,255,0.7)",tail:"#b890ee",
+   eye:"#6633cc",nose:"#ff99ff",whisker:"rgba(220,180,255,0.65)",
+   glow:"rgba(180,130,255,0.35)",shadow:"#9966dd",
+   markings:[{type:"halo",color:"rgba(255,220,100,0.55)"},{type:"star",x:0.05,y:-0.05,size:0.12,color:"rgba(255,215,80,0.6)"}]}
+];
+
+// ══════════════════════════════════════════════════
+//  DATA — 50 LOVE NOTES
+// ══════════════════════════════════════════════════
+const NOTES=[
+{icon:"💙",title:"My Morning Thought",body:"Kinsey, you are the very first thought I have every single morning.\nYou light up every room without even trying, baby.\nI am so grateful God placed you in my life.",verse:"\"She is clothed with strength and dignity.\" — Proverbs 31:25"},
+{icon:"🌙",title:"Always Here For You",body:"Baby, even on my hardest days, thinking of you makes everything okay.\nYou are my peace when the whole world feels loud.\nI will always be right here — no matter what, no matter when.",verse:"\"The Lord your God is with you wherever you go.\" — Joshua 1:9"},
+{icon:"🌸",title:"How Rare You Are",body:"Kinsey, I want you to know just how rare and wonderful you truly are.\nThere is nobody on this earth quite like you, my love.\nI love every single piece of who you are.",verse:"\"You are altogether beautiful, my darling.\" — Song of Solomon 4:7"},
+{icon:"⭐",title:"I'd Choose You Again",body:"Babe, I would choose you again in every single lifetime.\nEvery moment with you is a gift I don't deserve.\nThank you for being mine.",verse:"\"Every good gift is from above.\" — James 1:17"},
+{icon:"💫",title:"You Deserve It All",body:"My love, you deserve every beautiful thing this world has to offer.\nI will spend forever making sure you feel exactly that.\nYou are everything to me, Kinsey.",verse:"\"Love never fails.\" — 1 Corinthians 13:8"},
+{icon:"🌹",title:"Every Little Thing",body:"Kinsey, I notice all the little things about you that make you, you.\nThe way you smile, the way you laugh, the way you care so deeply.\nI fall a little more in love every single day.",verse:"\"I have loved you with an everlasting love.\" — Jeremiah 31:3"},
+{icon:"✨",title:"Never Stopping",body:"Baby, I will never stop fighting for us — not ever.\nYou are worth every single effort.\nI promise I am always in your corner.",verse:"\"Two are better than one.\" — Ecclesiastes 4:9"},
+{icon:"💜",title:"My Forever",body:"Babe, I think about the future and you are in every single version of it.\nI cannot picture my life without you in it.\nYou are my forever and I mean that completely.",verse:"\"The greatest of these is love.\" — 1 Corinthians 13:13"},
+{icon:"🌟",title:"Your Beautiful Heart",body:"Kinsey, your heart is one of the most beautiful things I have ever known.\nThe way you love people so fully is extraordinary.\nI am the luckiest person alive to be loved by you.",verse:"\"Love one another as I have loved you.\" — John 13:34"},
+{icon:"🕊️",title:"Never Alone",body:"My love, on the nights you feel alone, please remember I am thinking of you.\nYou are never far from my heart, not even for a second.\nI carry you with me everywhere I go.",verse:"\"I will never leave you nor forsake you.\" — Hebrews 13:5"},
+{icon:"💙",title:"Better Because of You",body:"Kinsey, you make me want to be a better person every single day.\nYou inspire me in ways you don't even realize.\nI am so incredibly proud to love you.",verse:"\"Let all that you do be done in love.\" — 1 Corinthians 16:14"},
+{icon:"🌺",title:"Cheering For Your Dreams",body:"Baby, I love the way your mind works and the dreams you carry.\nI love the things you care about — they say so much about who you are.\nKeep dreaming. I will always be your biggest fan.",verse:"\"Delight yourself in the Lord.\" — Psalm 37:4"},
+{icon:"🌙",title:"Ordinary Moments",body:"Babe, late nights feel completely different because of you.\nYou have turned ordinary moments into ones I will never forget.\nThank you for making life feel worth living.",verse:"\"This is the day the Lord has made; rejoice.\" — Psalm 118:24"},
+{icon:"💛",title:"Your Smile Stops Me",body:"My love, your smile could honestly stop my heart every time.\nI never get tired of seeing it — not once, not ever.\nPlease never stop smiling like that, Kinsey.",verse:"\"A joyful heart is good medicine.\" — Proverbs 17:22"},
+{icon:"🌸",title:"All Your Days",body:"Kinsey, I love you on your good days and your really hard ones.\nI love you when you feel beautiful and when you don't.\nYou are always stunning to me.",verse:"\"The Lord looks at the heart.\" — 1 Samuel 16:7"},
+{icon:"⭐",title:"You Can Trust Me",body:"Baby, I will always be completely honest with you.\nI will tell you the truth because you deserve nothing less.\nYou can trust me with your heart.",verse:"\"Truthful lips endure forever.\" — Proverbs 12:19"},
+{icon:"💫",title:"Not Going Anywhere",body:"Babe, I am not going anywhere — I need you to know that.\nNo storm, no distance, no hard season will change how I feel.\nI am yours and I mean it with everything I have.",verse:"\"Love bears all things, endures all things.\" — 1 Corinthians 13:7"},
+{icon:"🌹",title:"You Opened Me Up",body:"Kinsey, you have made me feel things I never knew were possible.\nYou opened a part of my heart I didn't know was there.\nI am so endlessly grateful it was you.",verse:"\"He has made everything beautiful in its time.\" — Ecclesiastes 3:11"},
+{icon:"✨",title:"Even When We're Apart",body:"My love, even when we are apart I still feel so close to you.\nYou live in my thoughts and in my heart all day long.\nMissing you is just proof of how deeply I love you.",verse:"\"Two can defend themselves.\" — Ecclesiastes 4:12"},
+{icon:"💙",title:"I'll Always Show Up",body:"Kinsey, I want to be the person who always shows up for you.\nThe one you call when everything gets hard.\nThat is exactly who I will always try to be.",verse:"\"A friend loves at all times.\" — Proverbs 17:17"},
+{icon:"🌟",title:"Your Laugh Is Everything",body:"Baby, your laugh is one of my favorite sounds in the world.\nI would do the most ridiculous things just to hear it.\nYou make joy feel completely contagious.",verse:"\"Rejoice in the Lord always.\" — Philippians 4:4"},
+{icon:"🕊️",title:"I See How Hard You Try",body:"Babe, I see how hard you try every day and it does not go unnoticed.\nYou carry so much and you do it with such grace.\nI am so proud of everything you are.",verse:"\"Whatever you do, work at it with all your heart.\" — Colossians 3:23"},
+{icon:"💜",title:"I Want To Take It Away",body:"My love, when you are sad I want nothing more than to take it away.\nYou deserve only peace and joy and rest, Kinsey.\nI will always try to bring more of both.",verse:"\"Cast all your anxiety on him because he cares for you.\" — 1 Peter 5:7"},
+{icon:"🌺",title:"How Lucky I Got",body:"Kinsey, you are the kind of person I used to only hope I would meet.\nI cannot believe how incredibly lucky I got.\nGod was so good to me the day He brought us together.",verse:"\"I know the plans I have for you.\" — Jeremiah 29:11"},
+{icon:"💙",title:"The Way You See Things",body:"Baby, I love the way you see the world around you.\nYou notice beauty in things most people walk right past.\nThat is one of a thousand things I adore about you.",verse:"\"Open my eyes to see wonderful things.\" — Psalm 119:18"},
+{icon:"🌙",title:"Our Future Excites Me",body:"Babe, I think about our future and it genuinely excites me.\nEvery good thing I imagine has you right in the middle of it.\nYou are my favorite daydream.",verse:"\"Hope does not put us to shame.\" — Romans 5:5"},
+{icon:"⭐",title:"I Love You As You Are",body:"My love, even on the days I am not my best self, you still love me.\nThat means more than you will ever know, Kinsey.\nAnd I love you for exactly who you are too.",verse:"\"Accept one another as Christ accepted you.\" — Romans 15:7"},
+{icon:"🌸",title:"You Feel Like Home",body:"Kinsey, being around you feels like coming home after a long time away.\nYou are comfortable and warm and completely safe.\nI never want to leave that feeling.",verse:"\"The Lord bless you and keep you.\" — Numbers 6:24"},
+{icon:"💫",title:"Love You Every Day",body:"Baby, I never want you to question how I feel about you.\nSo let me say it clearly: I love you completely.\nNot just some days. Every single day. Always.",verse:"\"Perfect love drives out fear.\" — 1 John 4:18"},
+{icon:"🌹",title:"Stronger Than You Know",body:"Babe, you are so much stronger than you even realize.\nI have watched you carry things that would break most people.\nYou are incredible and I need you to believe that.",verse:"\"I can do all things through Christ who strengthens me.\" — Philippians 4:13"},
+{icon:"✨",title:"You Make The World Better",body:"My love, just knowing you exist makes this world better.\nYou are genuinely one of a kind, Kinsey.\nI thank God for you constantly — every single day.",verse:"\"Give thanks in all circumstances.\" — 1 Thessalonians 5:18"},
+{icon:"💙",title:"Proud To Love You",body:"Kinsey, I will always be completely proud to love you.\nI will never be quiet about it — not once.\nYou are someone worth celebrating every single day.",verse:"\"Let your light shine before others.\" — Matthew 5:16"},
+{icon:"🌟",title:"Doing Life With You",body:"Baby, I love doing life with you — all of it.\nEven the boring stuff feels special when you are there.\nI want a lifetime of ordinary moments with you.",verse:"\"This is the day the Lord has made.\" — Psalm 118:24"},
+{icon:"🕊️",title:"I'm Listening",body:"Babe, I promise I will always truly listen to you.\nNot just hear the words — actually listen with my whole heart.\nYou and everything you feel will always matter to me.",verse:"\"Be quick to listen, slow to speak.\" — James 1:19"},
+{icon:"💜",title:"You Deserve Deep Love",body:"My love, you deserve someone who loves you the way you love others.\nI want to be that person every single day, Kinsey.\nYou deserve to be loved so completely.",verse:"\"Love one another, for love is from God.\" — 1 John 4:7"},
+{icon:"🌺",title:"You Make People Feel Seen",body:"Kinsey, you have this gift of making every person feel truly seen.\nIt is rare and so beautiful.\nI feel more seen by you than anyone in my life.",verse:"\"The Lord looks at the heart.\" — 1 Samuel 16:7"},
+{icon:"💙",title:"I Miss You",body:"Baby, I miss you every single time we are apart — every time.\nThat missing is just love with nowhere to go for a little while.\nBut I always carry it home to you, Kinsey.",verse:"\"Where you go I will go.\" — Ruth 1:16"},
+{icon:"🌙",title:"My Best Friend",body:"Babe, you are not just my love — you are my very best friend.\nI want to tell you everything and hear everything from you.\nYou are my person, fully and completely.",verse:"\"A friend loves at all times.\" — Proverbs 17:17"},
+{icon:"⭐",title:"When Life Gets Messy",body:"My love, I will stand right beside you when life gets messy.\nI am not going anywhere when things get hard — not ever.\nThat is what it truly means to love someone.",verse:"\"Love is patient, love is kind.\" — 1 Corinthians 13:4"},
+{icon:"🌸",title:"You Changed Me",body:"Kinsey, you have changed me in the best possible ways.\nLoving you has made me grow into someone better.\nI am a better person because of you.",verse:"\"As iron sharpens iron.\" — Proverbs 27:17"},
+{icon:"💫",title:"Your Safe Place",body:"Baby, I want to be your safest place in this whole world.\nThe place you come to when everything feels too much.\nI am always here, arms open, Kinsey.",verse:"\"God is our refuge and strength.\" — Psalm 46:1"},
+{icon:"🌹",title:"Your Soul Is Breathtaking",body:"Babe, I think you are the most beautiful person I have ever seen.\nNot just on the outside, though that is true as well.\nYour soul is breathtaking, Kinsey — genuinely.",verse:"\"A woman who fears the Lord is to be praised.\" — Proverbs 31:30"},
+{icon:"✨",title:"I Choose You Every Day",body:"My love, I choose you every single morning when I wake up.\nIt is never a question and it never will be.\nYou are my choice, always and always, Kinsey.",verse:"\"I have chosen you and not rejected you.\" — Isaiah 41:9"},
+{icon:"💙",title:"The Way You Love Me",body:"Kinsey, I love the way you love me so patiently and gently.\nYou are patient with me even when I don't deserve it.\nI want to spend forever earning that love from you.",verse:"\"Whoever pursues love finds life.\" — Proverbs 21:21"},
+{icon:"🌟",title:"You Are Enough",body:"Baby, I just want to remind you today that you are enough.\nExactly as you are, right now, you are more than enough.\nYou never have to earn love from me.",verse:"\"You are precious and honored in my sight.\" — Isaiah 43:4"},
+{icon:"🕊️",title:"You Carry Sunshine",body:"Babe, the world is so much brighter with you in it.\nI am convinced you carry actual sunshine inside you.\nNever let anyone dim that light.",verse:"\"The light shines in the darkness.\" — John 1:5"},
+{icon:"💜",title:"I Pray For You",body:"Kinsey, I will pray for you every single day — every one.\nI will ask God to keep you safe and bless you richly.\nYou deserve every good thing He has for you.",verse:"\"The Lord make his face shine on you.\" — Numbers 6:25"},
+{icon:"🌺",title:"My Whole Heart",body:"My love, I am so deeply in love with you it still surprises me.\nYou have my whole heart — every single corner of it, Kinsey.\nI would not take even one small piece of it back.",verse:"\"Love one another deeply, from the heart.\" — 1 Peter 1:22"},
+{icon:"💙",title:"Written On My Heart",body:"Baby, no matter what happens in this life, please know this:\nI have always loved you and I always will — always.\nYou are written on my heart forever.",verse:"\"I have engraved you on the palms of my hands.\" — Isaiah 49:16"},
+{icon:"🌙",title:"The Last Note 💙",body:"Kinsey, this is the very last note and it comes from the deepest part of me.\nI love you with everything I am, everything I have, and everything I hope to be.\nYou are my greatest blessing and I will never stop telling you so.",verse:"\"Put on love, which binds everything in perfect harmony.\" — Colossians 3:14"},
+];
+
+// ══════════════════════════════════════════════════
+//  DATA — 25 SPECIAL NOTES FROM GRANDPA
+// ══════════════════════════════════════════════════
+const SPECIAL_NOTES=[
+{icon:"🌟",title:"Still Watching Over You",body:"Kinsey, I want you to know I am still watching over you every single day.\nI see how hard you are trying and how far you have come.\nI am so proud of the woman you are becoming, sweetheart.",verse:"\"He will command his angels to guard you.\" — Psalm 91:11"},
+{icon:"☀️",title:"You Were My Sunshine",body:"You were my sunshine, Kinsey — you always will be.\nEvery time you laughed it made my whole world lighter.\nI carry that laugh with me up here and it still makes me smile.",verse:"\"The Lord is my light and my salvation.\" — Psalm 27:1"},
+{icon:"🕊️",title:"Don't Grieve Too Long",body:"Sweetheart, please don't grieve too long for me.\nI am at peace and whole and I am not far from you.\nGrieve if you need to — then go live and be happy, for me.",verse:"\"He will wipe every tear from their eyes.\" — Revelation 21:4"},
+{icon:"🌸",title:"I Am So Proud of You",body:"Kinsey, I need you to hear this from me: I am so deeply proud of you.\nNot for what you do — for who you are inside.\nYou have the kindest heart I have ever known.",verse:"\"Well done, good and faithful servant.\" — Matthew 25:21"},
+{icon:"💛",title:"I Miss You Too",body:"I miss you too, sweetheart — more than words can say.\nBut missing means love and our love does not end here.\nIt stretches all the way from Heaven straight to your heart.",verse:"\"Love never ends.\" — 1 Corinthians 13:8"},
+{icon:"🌟",title:"Heaven Is Beautiful",body:"I want you to know that it is beautiful here, Kinsey.\nThere is no pain, no sadness, no hard days — only peace.\nAnd I will be right here waiting when your time comes.",verse:"\"No eye has seen what God has prepared.\" — 1 Corinthians 2:9"},
+{icon:"🌺",title:"You Have His Eyes",body:"Sweetheart, you have always had eyes that see the good in people.\nThat is one of the most precious gifts God ever gave you.\nNever stop seeing the world that way, my girl.",verse:"\"Blessed are the pure in heart.\" — Matthew 5:8"},
+{icon:"💙",title:"I Watched You Grow",body:"Kinsey, I watched you grow from the very beginning.\nEvery little step you took made my heart so full it could burst.\nYou were always my greatest joy — always.",verse:"\"Children are a heritage from the Lord.\" — Psalm 127:3"},
+{icon:"⭐",title:"Keep Going",body:"Sweetheart, when the days get heavy — and they will sometimes — keep going.\nYou are tougher than you know and stronger than you feel.\nI gave you everything I had and it lives inside you still.",verse:"\"Be strong and courageous. Do not be afraid.\" — Joshua 1:9"},
+{icon:"🌙",title:"I'm Never Far",body:"Kinsey, I am never truly far from you.\nWhen you feel the wind or see a sunset that takes your breath away — that's me.\nI am woven into all the beautiful things you love.",verse:"\"The Lord is near to the brokenhearted.\" — Psalm 34:18"},
+{icon:"🕊️",title:"You Were My Answered Prayer",body:"You were an answered prayer, Kinsey — every single day.\nI prayed for you before you even knew what prayer was.\nGod heard every one and gave me more than I asked for.",verse:"\"Before they call I will answer.\" — Isaiah 65:24"},
+{icon:"🌟",title:"Take Care of Yourself",body:"Sweetheart, will you do something for me — take care of yourself.\nYou matter so very much to so many people who love you.\nI need to know my girl is being good to herself.",verse:"\"You are worth more than many sparrows.\" — Matthew 10:31"},
+{icon:"💛",title:"Your Laugh Lives Up Here",body:"Your laugh, Kinsey — I hear it still.\nIt is one of the most beautiful sounds in all of creation.\nKeep laughing. Keep finding joy. That is what I want for you.",verse:"\"A joyful heart is good medicine.\" — Proverbs 17:22"},
+{icon:"🌸",title:"Let It Go",body:"Sweetheart, if there is anything you are still carrying — let it go.\nI forgive everything and I always did. There was nothing to forgive.\nI just want you to be free and completely at peace.",verse:"\"Forgive, and you will be forgiven.\" — Luke 6:37"},
+{icon:"💙",title:"You Were My Heart",body:"Kinsey, you were my heart walking around outside my chest.\nEvery time something good happened to you, I felt it too.\nThat is what real love is — and ours was always real.",verse:"\"I have loved you with an everlasting love.\" — Jeremiah 31:3"},
+{icon:"⭐",title:"Find the Joy",body:"Sweetheart, find the joy in every ordinary day — please.\nThe little things are where life actually lives, my girl.\nI learned that, and I want you to live it for both of us.",verse:"\"This is the day the Lord has made; rejoice.\" — Psalm 118:24"},
+{icon:"🌙",title:"You Are Not Alone",body:"Kinsey, on your loneliest nights please remember this:\nyou are surrounded by love — mine and God's and so many others.\nYou are never, ever alone in this world.",verse:"\"God sets the lonely in families.\" — Psalm 68:6"},
+{icon:"🌺",title:"I Saw Your Strength",body:"I saw your strength when things got hard, sweetheart.\nI watched you hold yourself together when I know it hurt.\nThat kind of strength is a gift from God — and you have it.",verse:"\"The Lord is the strength of my life.\" — Psalm 27:1"},
+{icon:"🕊️",title:"Heaven Hears You",body:"Kinsey, when you pray, heaven hears you — I promise.\nI have heard your name mentioned up here and it is loved.\nKeep praying, sweetheart. Keep talking to Him.",verse:"\"The prayer of a righteous person is powerful.\" — James 5:16"},
+{icon:"💛",title:"Tell Them I Love Them",body:"Sweetheart, tell everyone down there that I love them.\nHold them a little tighter and a little longer when you can.\nThat is the best gift you can give them — and me.",verse:"\"Love one another deeply, from the heart.\" — 1 Peter 1:22"},
+{icon:"🌟",title:"No More Pain",body:"I want you to know there is no more pain for me, Kinsey.\nEvery hard thing is gone — every ache, every worry, every fear.\nI am completely at peace up here.",verse:"\"He will wipe every tear from their eyes.\" — Revelation 21:4"},
+{icon:"💙",title:"You Made Me Proud Every Day",body:"Sweetheart, you made me proud every single day — not just the big ones.\nThe ordinary evenings and quiet moments meant the most to me.\nThose moments with you were my whole world.",verse:"\"How good and pleasant it is when people live together in unity.\" — Psalm 133:1"},
+{icon:"🌸",title:"Go Love Well",body:"Kinsey, go love well — that is all I ask of you.\nLove the people in your life like they might not be there tomorrow.\nBecause sometimes they aren't. And love is what remains.",verse:"\"The greatest of these is love.\" — 1 Corinthians 13:13"},
+{icon:"⭐",title:"See You Again",body:"This is not goodbye, sweetheart — it never was.\nI will see you again and when I do I will hold you so tight.\nUntil then, live fully, love freely, and know I am with you.",verse:"\"I am the resurrection and the life.\" — John 11:25"},
+{icon:"🌟",title:"My Love Never Left",body:"Kinsey, my love for you never left when I did.\nIt stayed right there with you, woven into every memory.\nYou will carry me with you forever — just as I carry you.",verse:"\"Nothing shall separate us from the love of God.\" — Romans 8:38-39"},
+];
+
+// ══════════════════════════════════════════════════
+//  SAVE / LOAD
+// ══════════════════════════════════════════════════
+const SAVE_KEY="kinseyGame_v4";
+function loadSave(){try{return JSON.parse(localStorage.getItem(SAVE_KEY))||{};}catch(e){return {};}}
+function writeSave(d){try{localStorage.setItem(SAVE_KEY,JSON.stringify(d));}catch(e){}}
+let save=loadSave();
+const def=(k,v)=>{if(save[k]===undefined)save[k]=v;};
+def("found",[]); def("foundSpecial",[]); def("score",0); def("memories",0);
+def("catId","moo"); def("musicOn",true); def("sfxOn",true);
+def("secretUnlocked",false); def("thoughts",[]); def("bottleUsed",false);
+
+let score=save.score, memories=save.memories, streak=0, comboTimer=null;
+const MAX_STREAK=8;
+let foundNotes=new Set(save.found);
+let foundSpecial=new Set(save.foundSpecial);
+let selectedCatId=save.catId;
+let musicOn=save.musicOn, sfxOn=save.sfxOn;
+let secretUnlocked=save.secretUnlocked;
+let thoughts=[...save.thoughts];
+let bottleUsedThisSession=false;
+
+function saveAll(){
+  save.found=[...foundNotes]; save.foundSpecial=[...foundSpecial];
+  save.score=score; save.memories=memories;
+  save.catId=selectedCatId; save.musicOn=musicOn; save.sfxOn=sfxOn;
+  save.secretUnlocked=secretUnlocked; save.thoughts=thoughts;
+  writeSave(save);
+}
+function getCat(){return CATS.find(c=>c.id===selectedCatId)||CATS[0];}
+
+// ══════════════════════════════════════════════════
+//  CANVAS
+// ══════════════════════════════════════════════════
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+const cursorEl=document.getElementById("cursor");
+let mouseX=canvas.width/2, mouseY=canvas.height/2;
+window.addEventListener("mousemove",e=>{mouseX=e.clientX;mouseY=e.clientY;cursorEl.style.left=e.clientX+"px";cursorEl.style.top=e.clientY+"px";});
+window.addEventListener("touchmove",e=>{mouseX=e.touches[0].clientX;mouseY=e.touches[0].clientY;},{passive:true});
+
+// ══════════════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════════════
+let gameRunning=false, paused=false, modalOpen=false;
+let finaleTriggered=false, finaleMode=false, finaleModeTimer=0;
+
+// ══════════════════════════════════════════════════
+//  SCREENS
+// ══════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  if(id) document.getElementById(id).classList.add("active");
+}
+function showPanel(id){document.getElementById(id).classList.add("show");}
+function hidePanel(id){document.getElementById(id).classList.remove("show");}
+
+// ══════════════════════════════════════════════════
+//  PAUSE
+// ══════════════════════════════════════════════════
+function setPaused(val){
+  paused=val;
+  // Settings menu now acts as pause menu
+  if(val){
+    updateSettingsBtns();
+    showPanel("settingsPanel");
+    document.getElementById("togglePause").textContent="▶";
+  } else {
+    hidePanel("settingsPanel");
+    document.getElementById("togglePause").textContent="⏸️";
+  }
+}
+
+// Pause menu buttons (now in settings)
+document.getElementById("togglePause").addEventListener("click",()=>{
+  // This button is now redundant since settings menu is the pause menu
+  // But we'll keep it for consistency
+  setPaused(!paused);
+});
+
+window.addEventListener("keydown",e=>{
+  if(e.key==="Escape"&&gameRunning&&!modalOpen){
+    if(paused) setPaused(false); else setPaused(true);
+  }
+});
+
+// Help modal
+document.getElementById("helpBtn").addEventListener("click",()=>{
+  showPanel("helpModal");
+});
+document.getElementById("helpBack").addEventListener("click",()=>{
+  hidePanel("helpModal");
+});
+document.getElementById("helpClose").addEventListener("click",()=>{
+  hidePanel("helpModal");
+});
+
+// Back to menu button
+document.getElementById("pauseToMenuBtn").addEventListener("click",()=>{
+  setPaused(false); gameRunning=false;
+  showScreen("startScreen");
+});
+
+// ══════════════════════════════════════════════════
+//  CAT PICKER
+// ══════════════════════════════════════════════════
+function buildPicker(){
+  const grid=document.getElementById("catGrid"); grid.innerHTML="";
+  const hint=document.getElementById("secretHint");
+  hint.style.display=secretUnlocked?"none":"block";
+  CATS.forEach(c=>{
+    if(c.secret&&!secretUnlocked) return; // skip locked secret cat in normal flow
+    const d=document.createElement("div");
+    const isSel=c.id===selectedCatId;
+    d.className="cat-option"+(isSel?" selected":"")+(c.secret?" secret-unlocked":"");
+    d.innerHTML=`<span class="check">✓</span>
+      <span class="cat-preview" style="filter:drop-shadow(0 0 8px ${c.glow||'rgba(200,150,255,0.3)'})">${c.preview}</span>
+      <span class="cat-name">${c.name}</span>
+      <span class="cat-desc">${c.desc}</span>`;
+    d.addEventListener("click",()=>{
+      selectedCatId=c.id;
+      document.querySelectorAll(".cat-option").forEach(x=>x.classList.remove("selected"));
+      d.classList.add("selected");
+    });
+    grid.appendChild(d);
+  });
+}
+document.getElementById("toPickerBtn").addEventListener("click",()=>{buildPicker();showScreen("pickerScreen");});
+document.getElementById("changeCatBtn").addEventListener("click",()=>{hidePanel("settingsPanel");setPaused(false);buildPicker();showScreen("pickerScreen");});
+document.getElementById("pickerDoneBtn").addEventListener("click",()=>{saveAll();showScreen("startScreen");});
+document.getElementById("pickerBackBtn").addEventListener("click",()=>showScreen("startScreen"));
+document.getElementById("startBtn").addEventListener("click",()=>{
+  showScreen(null); setPaused(false);
+  if(!gameRunning){gameRunning=true;}
+  getAC(); if(musicOn&&!lullabyStarted) startLullaby();
+});
+
+// ══════════════════════════════════════════════════
+//  HUD
+// ══════════════════════════════════════════════════
+const scoreEl=document.getElementById("scoreVal");
+const noteCountEl=document.getElementById("noteCountVal");
+const specialCountEl=document.getElementById("specialCountVal");
+const memEl=document.getElementById("memVal");
+const streakEl=document.getElementById("streakVal");
+scoreEl.textContent=score; noteCountEl.textContent=foundNotes.size;
+specialCountEl.textContent=foundSpecial.size; memEl.textContent=memories;
+
+const streakBarEl=document.getElementById("streakBar");
+for(let i=0;i<MAX_STREAK;i++){const p=document.createElement("div");p.className="streak-pip";p.id=`pip-${i}`;streakBarEl.appendChild(p);}
+function updatePips(){for(let i=0;i<MAX_STREAK;i++)document.getElementById(`pip-${i}`).classList.toggle("lit",i<streak);}
+
+// ══════════════════════════════════════════════════
+//  JOURNAL TABS
+// ══════════════════════════════════════════════════
+document.querySelectorAll(".j-tab").forEach(tab=>{
+  tab.addEventListener("click",()=>{
+    document.querySelectorAll(".j-tab").forEach(t=>t.classList.remove("active"));
+    document.querySelectorAll(".j-section").forEach(s=>s.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(tab.dataset.tab).classList.add("active");
+  });
+});
+
+function buildJournal(){
+  document.getElementById("jprogress").textContent=`${foundNotes.size} / 50 found`;
+  document.getElementById("jsprogress").textContent=`${foundSpecial.size} / 25 found`;
+  const g=document.getElementById("jgrid"); g.innerHTML="";
+  for(let i=0;i<50;i++){
+    const d=document.createElement("div");
+    d.className="jnote"+(foundNotes.has(i)?" found":"");
+    d.innerHTML=`<span class="jicon">${foundNotes.has(i)?NOTES[i].icon:"🔒"}</span><div class="jtitle">${foundNotes.has(i)?NOTES[i].title:`Note #${i+1}`}</div>`;
+    if(foundNotes.has(i))d.addEventListener("click",()=>{hidePanel("journalPanel");showNoteModal(i,"regular",false);});
+    g.appendChild(d);
+  }
+  const gs=document.getElementById("jgridSpecial"); gs.innerHTML="";
+  for(let i=0;i<25;i++){
+    const d=document.createElement("div");
+    d.className="jnote gold"+(foundSpecial.has(i)?" found":"");
+    d.innerHTML=`<span class="jicon">${foundSpecial.has(i)?SPECIAL_NOTES[i].icon:"🔒"}</span><div class="jtitle">${foundSpecial.has(i)?SPECIAL_NOTES[i].title:`From Grandpa #${i+1}`}</div>`;
+    if(foundSpecial.has(i))d.addEventListener("click",()=>{hidePanel("journalPanel");showNoteModal(i,"special",false);});
+    gs.appendChild(d);
+  }
+  buildThoughts();
+}
+
+function buildThoughts(){
+  const sec=document.getElementById("thoughtsSection"); sec.innerHTML="";
+  if(!thoughts.length){sec.innerHTML='<div class="thought-empty">Catch a message in a bottle to write your first thought 💌</div>';return;}
+  thoughts.slice().reverse().forEach(t=>{
+    const d=document.createElement("div"); d.className="thought-entry";
+    d.innerHTML=`<div class="te-date">${t.date}</div><div class="te-text">${escHtml(t.text)}</div>`;
+    sec.appendChild(d);
+  });
+}
+
+function escHtml(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\n/g,"<br>");}
+
+document.getElementById("journalBtn").addEventListener("click",()=>{if(!gameRunning)return;buildJournal();showPanel("journalPanel");});
+document.getElementById("journalBack").addEventListener("click",()=>{hidePanel("journalPanel");});
+document.getElementById("journalClose").addEventListener("click",()=>{hidePanel("journalPanel");});
+
+// ══════════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════════
+function updateSettingsBtns(){
+  document.getElementById("toggleMusic").textContent=musicOn?"On":"Off";
+  document.getElementById("toggleSfx").textContent=sfxOn?"On":"Off";
+}
+document.getElementById("settingsBtn").addEventListener("click",()=>{
+  if(!gameRunning)return;
+  setPaused(true); updateSettingsBtns(); showPanel("settingsPanel");
+});
+document.getElementById("settingsBack").addEventListener("click",()=>{saveAll();hidePanel("settingsPanel");setPaused(false);});
+document.getElementById("settingsClose").addEventListener("click",()=>{saveAll();hidePanel("settingsPanel");setPaused(false);});
+document.getElementById("toggleMusic").addEventListener("click",()=>{musicOn=!musicOn;updateSettingsBtns();saveAll();});
+document.getElementById("toggleSfx").addEventListener("click",()=>{sfxOn=!sfxOn;updateSettingsBtns();saveAll();});
+
+document.getElementById("resetBtn").addEventListener("click",()=>document.getElementById("confirmDialog").classList.add("show"));
+document.getElementById("confirmNo").addEventListener("click",()=>document.getElementById("confirmDialog").classList.remove("show"));
+document.getElementById("confirmYes").addEventListener("click",()=>{
+  save={found:[],foundSpecial:[],score:0,memories:0,catId:"moo",musicOn,sfxOn,secretUnlocked:false,thoughts:[],bottleUsed:false};
+  writeSave(save); foundNotes=new Set(); foundSpecial=new Set();
+  score=0; memories=0; streak=0; secretUnlocked=false; thoughts=[];
+  finaleTriggered=false; finaleMode=false; bottleUsedThisSession=false;
+  scoreEl.textContent=0; noteCountEl.textContent=0; specialCountEl.textContent=0;
+  memEl.textContent=0; streakEl.textContent=0; updatePips();
+  document.getElementById("confirmDialog").classList.remove("show");
+  hidePanel("settingsPanel"); setPaused(false);
+  showPopup("Progress reset ✓",canvas.width/2-70,canvas.height/2,"rgba(255,150,150,1)");
+});
+
+// ══════════════════════════════════════════════════
+//  NOTE MODAL
+// ══════════════════════════════════════════════════
+function showNoteModal(idx,type,isNew){
+  const n=type==="special"?SPECIAL_NOTES[idx]:NOTES[idx];
+  const card=document.getElementById("noteCard");
+  const fh=document.getElementById("fromHeaven");
+  if(type==="special"){
+    card.className="card special"; fh.style.display="block";
+    document.getElementById("noteNum").textContent=`From Grandpa  •  ${idx+1} of 25  •  ${n.title}`;
+    document.getElementById("noteClose").textContent="Close 🌟";
+  } else {
+    card.className="card regular"; fh.style.display="none";
+    document.getElementById("noteNum").textContent=`Love Note ${idx+1} of 50  •  ${n.title}`;
+    document.getElementById("noteClose").textContent="Keep Playing 💙";
+  }
+  if(isNew){card.style.animation="none";void card.offsetWidth;card.style.animation="";}
+  document.getElementById("noteIcon").textContent=n.icon;
+  document.getElementById("noteBody").innerHTML=n.body.split("\n").join("<br>");
+  document.getElementById("noteVerse").textContent=n.verse;
+  document.getElementById("noteModal").classList.add("show");
+  modalOpen=true;
+}
+  document.getElementById("noteClose").addEventListener("click",()=>{document.getElementById("noteModal").classList.remove("show");modalOpen=false;});
+  document.getElementById("noteBackdrop").addEventListener("click",()=>{document.getElementById("noteModal").classList.remove("show");modalOpen=false;});
+
+// ══════════════════════════════════════════════════
+//  BOTTLE MODAL
+// ══════════════════════════════════════════════════
+const bottleTa=document.getElementById("bottleTextarea");
+bottleTa.addEventListener("input",()=>document.getElementById("charCount").textContent=`${bottleTa.value.length} / 600`);
+function openBottleModal(){
+  bottleTa.value=""; document.getElementById("charCount").textContent="0 / 600";
+  document.getElementById("bottleModal").classList.add("show");
+  modalOpen=true;
+  setTimeout(()=>bottleTa.focus(),300);
+}
+function closeBottleModal(){document.getElementById("bottleModal").classList.remove("show");modalOpen=false;}
+document.getElementById("bottleSkip").addEventListener("click",closeBottleModal);
+document.getElementById("bottleBackdrop").addEventListener("click",closeBottleModal);
+document.getElementById("bottleSave").addEventListener("click",()=>{
+  const txt=bottleTa.value.trim();
+  if(!txt)return;
+  const now=new Date();
+  thoughts.push({text:txt,date:now.toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit"})});
+  saveAll(); closeBottleModal();
+  showPopup("💭 Thought saved 💙",canvas.width/2-75,canvas.height/2-30,"rgba(80,220,200,1)");
+});
+
+// ══════════════════════════════════════════════════
+//  FINALE
+// ══════════════════════════════════════════════════
+function checkFinale(){
+  if(finaleTriggered)return;
+  if(foundNotes.size>=50&&foundSpecial.size>=25){
+    finaleTriggered=true; triggerFinale();
+  }
+}
+function triggerFinale(){
+  if(!secretUnlocked){secretUnlocked=true;saveAll();}
+  const fo=document.getElementById("finaleOverlay");
+  document.getElementById("secretReveal").style.display="block";
+  fo.classList.add("show");
+  modalOpen=true; setPaused(true);
+  finaleMode=true; finaleModeTimer=30000;
+  playFinaleMusic();
+}
+document.getElementById("finaleClose").addEventListener("click",()=>{
+  document.getElementById("finaleOverlay").classList.remove("show");
+  modalOpen=false; setPaused(false);
+});
+
+// ══════════════════════════════════════════════════
+//  AUDIO
+// ══════════════════════════════════════════════════
+let audioCtx, lullabyStarted=false;
+function getAC(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();return audioCtx;}
+function playChime(freq=880,vol=0.12){
+  if(!sfxOn)return;
+  const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();
+  o.type="sine";o.frequency.value=freq;
+  g.gain.setValueAtTime(vol,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.9);
+  o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+0.9);
+}
+function playMemoryChime(){[523.25,659.25,783.99,1046.5].forEach((f,i)=>setTimeout(()=>playChime(f,0.09),i*160));}
+function playNoteChime(){[330,392,494,587,740,880].forEach((f,i)=>setTimeout(()=>playChime(f,0.09),i*110));}
+function playHeavenChime(){
+  if(!sfxOn)return;
+  const ac=getAC();
+  [523.25,659.25,783.99,1047,1319,1568].forEach((f,i)=>{
+    setTimeout(()=>{const o=ac.createOscillator(),g=ac.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0.07,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+1.5);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+1.5);},i*155);
+  });
+}
+function playFinaleMusic(){
+  if(!sfxOn)return;
+  const ac=getAC();
+  const melody=[523.25,659.25,783.99,1046.5,783.99,880,1046.5,1318.5,1046.5,783.99,659.25,523.25];
+  melody.forEach((f,i)=>{
+    setTimeout(()=>{const o=ac.createOscillator(),g=ac.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0.06,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+1.0);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+1.0);},i*300);
+  });
+}
+function startLullaby(){
+  if(lullabyStarted)return; lullabyStarted=true;
+  const notes=[261.6,329.6,392.0,329.6,261.6,196.0]; let i=0;
+  setInterval(()=>{
+    if(!musicOn||paused)return;
+    const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();
+    o.type="sine";o.frequency.value=notes[i%notes.length];g.gain.value=0.018;
+    o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+1.3);i++;
+  },1300);
+}
+
+// ══════════════════════════════════════════════════
+//  POPUP
+// ══════════════════════════════════════════════════
+function showPopup(text,x,y,color="#aee6ff"){
+  const d=document.createElement("div");d.className="popup";
+  d.textContent=text;d.style.left=x+"px";d.style.top=y+"px";
+  d.style.color=color;d.style.textShadow=`0 0 12px ${color}`;
+  document.body.appendChild(d);setTimeout(()=>d.remove(),1600);
+}
+
+// COMBO
+const comboEl=document.getElementById("combo");
+function showCombo(n){
+  if(n<3)return;
+  const l={3:"Sweet Trio! 🍬",4:"Lovely! 🌟",5:"On Fire! 🔥",6:"Magic! ✨",7:"Legendary! 💫",8:"PURR-FECT! 🐱"};
+  comboEl.textContent=l[Math.min(n,8)]||`${n}x Combo!`;
+  comboEl.classList.add("show");clearTimeout(comboTimer);
+  comboTimer=setTimeout(()=>comboEl.classList.remove("show"),1900);
+}
+
+// MEMORY CARD
+const memMsgs=["I miss and love you, Kinsey 💙","I always have you in my heart 💙","You make every day brighter, baby","Being with you feels like home 🌙","You are my calm in every storm 💙","I love sharing this world with you","Every second with you is a gift ✨","You are endlessly wonderful, my love","My favorite person in the whole world 💙","Thinking of you always, Kinsey 🌟"];
+let memCardShowing=false;
+function showMemoryCard(){
+  if(memCardShowing)return; memCardShowing=true;
+  document.getElementById("memCardMsg").textContent=memMsgs[Math.floor(Math.random()*memMsgs.length)];
+  const c=document.getElementById("memoryCard");c.classList.add("show");
+  setTimeout(()=>{c.classList.remove("show");setTimeout(()=>memCardShowing=false,600);},4000);
+}
+
+// ══════════════════════════════════════════════════
+//  BACKGROUND
+// ══════════════════════════════════════════════════
+let bgStars=Array.from({length:200},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5,tw:Math.random()*Math.PI*2,sp:0.005+Math.random()*0.012}));
+const nebulas=Array.from({length:10},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:90+Math.random()*170,hue:Math.random()>0.5?215:295,alpha:0.04+Math.random()*.05,dx:(Math.random()-.5)*.1,dy:(Math.random()-.5)*.05}));
+const clouds=Array.from({length:5},()=>({x:Math.random()*canvas.width,y:80+Math.random()*(canvas.height*.35),size:38+Math.random()*42,speed:.07+Math.random()*.12,alpha:.05+Math.random()*.06}));
+function drawCloud(c){ctx.save();ctx.globalAlpha=c.alpha;ctx.fillStyle="#c8e4ff";ctx.beginPath();ctx.arc(c.x,c.y,c.size,0,Math.PI*2);ctx.arc(c.x+c.size*.85,c.y,c.size*.7,0,Math.PI*2);ctx.arc(c.x-c.size*.85,c.y,c.size*.7,0,Math.PI*2);ctx.fill();ctx.restore();}
+
+// ══════════════════════════════════════════════════
+//  CAT DRAWING
+// ══════════════════════════════════════════════════
+const cat={x:canvas.width/2,y:canvas.height/2,size:45,floatOffset:0};
+let catShake=0;
+const trail=[];
+let angelGlow=0;
+
+function drawCat(x,y,size,shake){
+  const c=getCat();
+  ctx.save();ctx.translate(x+Math.sin(shake)*4,y);
+  // Secret angel cat extra effect
+  if(c.id==="angel"){
+    angelGlow=(angelGlow||0)+0.04;
+    const ag=1+Math.sin(angelGlow)*.15;
+    ctx.save();ctx.scale(ag,ag);
+    // Halo ring
+    const hg=CATS.find(x=>x.id==="angel").markings.find(m=>m.type==="halo");
+    if(hg){ctx.strokeStyle=hg.color;ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,-size*1.4,size*.7,0,Math.PI*2);ctx.stroke();}
+    ctx.restore();
+  }
+  const g=ctx.createRadialGradient(0,0,10,0,0,100);
+  g.addColorStop(0,c.glow||"rgba(200,150,255,0.2)");g.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,100,0,Math.PI*2);ctx.fill();
+  // Tail
+  ctx.beginPath();ctx.moveTo(size*.6,size*.3);ctx.bezierCurveTo(size*1.2,0,size*1.3,-size*.8,size*.5,-size*.7);
+  ctx.strokeStyle=c.tail;ctx.lineWidth=9;ctx.lineCap="round";ctx.stroke();
+  // Body
+  ctx.shadowColor=c.shadow||c.body;ctx.shadowBlur=20;
+  ctx.fillStyle=c.body;ctx.beginPath();ctx.arc(0,0,size,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  // Markings
+  (c.markings||[]).forEach(m=>{
+    if(m.type==="halo")return; // handled above
+    ctx.save();
+    if(m.type==="blob"){ctx.rotate(m.r||0);ctx.fillStyle=m.color;ctx.beginPath();ctx.ellipse(m.x*size,m.y*size,m.rx*size,m.ry*size,0,0,Math.PI*2);ctx.fill();}
+    else if(m.type==="star"){ctx.fillStyle=m.color;ctx.font=`${m.size*size*3}px serif`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("✦",m.x*size,m.y*size);}
+    else if(m.type==="stripe"){for(let i=0;i<3;i++){ctx.fillStyle=m.color;ctx.fillRect(-size,m.y?m.y*size:-size*.2+i*size*.38,size*2,size*.14);}}
+    ctx.restore();
+  });
+  // Ears
+  ctx.fillStyle=c.ear;
+  ctx.beginPath();ctx.moveTo(-size*.55,-size*.62);ctx.lineTo(-size*.85,-size*1.1);ctx.lineTo(-size*.2,-size*.75);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(size*.55,-size*.62);ctx.lineTo(size*.85,-size*1.1);ctx.lineTo(size*.2,-size*.75);ctx.closePath();ctx.fill();
+  ctx.fillStyle=c.innerEar;
+  ctx.beginPath();ctx.moveTo(-size*.55,-size*.68);ctx.lineTo(-size*.75,-size*.98);ctx.lineTo(-size*.28,-size*.76);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(size*.55,-size*.68);ctx.lineTo(size*.75,-size*.98);ctx.lineTo(size*.28,-size*.76);ctx.closePath();ctx.fill();
+  // Eyes
+  ctx.fillStyle="white";ctx.beginPath();ctx.ellipse(-16,-6,9,8,-0.2,0,Math.PI*2);ctx.ellipse(16,-6,9,8,0.2,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle=c.eye;ctx.beginPath();ctx.ellipse(-16,-6,4,6,0,0,Math.PI*2);ctx.ellipse(16,-6,4,6,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="white";ctx.beginPath();ctx.arc(-14,-8,2.5,0,Math.PI*2);ctx.arc(18,-8,2.5,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(0,12,10,0.1,Math.PI-0.1);ctx.strokeStyle=c.nose;ctx.lineWidth=2;ctx.stroke();
+  ctx.strokeStyle=c.whisker;ctx.lineWidth=1;
+  [[-1,-1],[1,1],[1,-1],[-1,1]].forEach(([sx,sy],i)=>{const ox=i<2?-size*.25:size*.25;ctx.beginPath();ctx.moveTo(ox,8);ctx.lineTo(ox+sx*size*.7,8+sy*4);ctx.stroke();});
+  ctx.fillStyle=c.nose;ctx.beginPath();ctx.moveTo(0,3);ctx.lineTo(-4,8);ctx.lineTo(4,8);ctx.closePath();ctx.fill();
+  ctx.restore();
+}
+
+// ══════════════════════════════════════════════════
+//  CANDIES
+// ══════════════════════════════════════════════════
+let candies=[];
+let spawnInterval=1800;
+function spawnCandy(){
+  const isMemory=Math.random()<0.1;
+  const isFinale=finaleMode&&Math.random()<0.7;
+  const hue=isFinale?40+Math.random()*15:(isMemory?310:195+Math.random()*35);
+  candies.push({x:40+Math.random()*(canvas.width-80),y:-25,size:isMemory?19:12+Math.random()*5,speed:.45+Math.random()*.55,memory:isMemory,finale:isFinale,hue,wobble:Math.random()*Math.PI*2,wobbleSpeed:.02+Math.random()*.02,wobbleAmp:.6+Math.random()*1.4,rotation:0,rotSpeed:(Math.random()-.5)*.04,scale:1,scaleDir:1});
+}
+function drawCandy(c){
+  ctx.save();ctx.translate(c.x+Math.sin(c.wobble)*c.wobbleAmp,c.y);ctx.rotate(c.rotation);ctx.scale(c.scale,c.scale);
+  const shadowCol=c.finale?`hsl(${c.hue},100%,75%)`:(c.memory?`hsl(${c.hue},100%,75%)`:`hsl(${c.hue},100%,75%)`);
+  ctx.shadowBlur=c.memory||c.finale?24:14;ctx.shadowColor=shadowCol;
+  if(c.finale){
+    // Gold heart
+    ctx.fillStyle=`hsl(${c.hue},100%,72%)`;
+    ctx.font=`${c.size*2.5}px serif`;ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("💛",0,0);
+  } else if(c.memory){
+    ctx.fillStyle=`hsl(${c.hue},100%,82%)`;ctx.beginPath();
+    for(let i=0;i<10;i++){const a=(i*Math.PI/5)-Math.PI/2,r=i%2===0?c.size:c.size*.45;i===0?ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r):ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);}
+    ctx.closePath();ctx.fill();
+  } else {
+    ctx.fillStyle=`hsl(${c.hue},90%,72%)`;ctx.beginPath();ctx.arc(0,0,c.size,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="rgba(255,255,255,0.38)";ctx.beginPath();ctx.arc(-c.size*.28,-c.size*.28,c.size*.3,0,Math.PI*2);ctx.fill();
+  }
+  ctx.shadowBlur=0;ctx.restore();
+}
+
+// ══════════════════════════════════════════════════
+//  LOVE NOTES (pink envelopes) — spawn ~90s
+// ══════════════════════════════════════════════════
+let worldNotes=[];
+function getUncollected(set,max){const u=[];for(let i=0;i<max;i++)if(!set.has(i))u.push(i);if(!u.length)return -1;return u[Math.floor(Math.random()*u.length)];}
+function spawnWorldNote(){
+  if(foundNotes.size>=50)return;
+  const idx=getUncollected(foundNotes,50);if(idx<0)return;
+  worldNotes.push({x:70+Math.random()*(canvas.width-140),y:-55,noteIdx:idx,speed:.24+Math.random()*.17,wobble:Math.random()*Math.PI*2,wobbleSpeed:.013+Math.random()*.013,wobbleAmp:13+Math.random()*19,rotation:(Math.random()-.5)*.14,rotSpeed:(Math.random()-.5)*.006,pulse:Math.random()*Math.PI*2});
+}
+function drawWorldNote(n){
+  n.pulse+=.035;const gs=1+Math.sin(n.pulse)*.05;
+  const wx=n.x+Math.sin(n.wobble)*n.wobbleAmp;
+  ctx.save();ctx.translate(wx,n.y);ctx.rotate(n.rotation);ctx.scale(gs,gs);
+  const og=ctx.createRadialGradient(0,0,4,0,0,48);og.addColorStop(0,"rgba(255,140,210,0.28)");og.addColorStop(1,"rgba(255,80,180,0)");ctx.fillStyle=og;ctx.beginPath();ctx.arc(0,0,48,0,Math.PI*2);ctx.fill();
+  const w=52,h=38,r=9;ctx.shadowColor="#ff88cc";ctx.shadowBlur=16;
+  ctx.fillStyle="rgba(14,8,30,0.94)";ctx.strokeStyle="rgba(255,165,225,0.88)";ctx.lineWidth=1.6;
+  ctx.beginPath();ctx.roundRect(-w/2,-h/2,w,h,r);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+  ctx.strokeStyle="rgba(255,180,230,0.42)";ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(-w/2,-h/2);ctx.lineTo(0,3);ctx.lineTo(w/2,-h/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-w/2,h/2);ctx.lineTo(0,3);ctx.lineTo(w/2,h/2);ctx.stroke();
+  ctx.font="16px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.shadowColor="#ff66bb";ctx.shadowBlur=10;ctx.fillText("💌",0,5);ctx.shadowBlur=0;
+  for(let k=0;k<3;k++){const sa=n.pulse+k*2.1,sr=32+k*4;ctx.fillStyle=`rgba(255,200,240,${.38+Math.sin(n.pulse+k)*.28})`;ctx.beginPath();ctx.arc(Math.cos(sa)*sr,Math.sin(sa)*sr,1.5,0,Math.PI*2);ctx.fill();}
+  ctx.restore();n._sx=wx;n._sy=n.y;
+}
+
+// ══════════════════════════════════════════════════
+//  SPECIAL HEAVEN NOTES (gold) — harder: ~150s
+// ══════════════════════════════════════════════════
+let heavenNotes=[];
+let heavenPixies=[];
+function spawnHeavenNote(){
+  if(foundSpecial.size>=25)return;
+  const idx=getUncollected(foundSpecial,25);if(idx<0)return;
+  heavenNotes.push({x:80+Math.random()*(canvas.width-160),y:-65,noteIdx:idx,speed:.15+Math.random()*.12,wobble:Math.random()*Math.PI*2,wobbleSpeed:.01+Math.random()*.01,wobbleAmp:8+Math.random()*14,rotation:(Math.random()-.5)*.07,rotSpeed:(Math.random()-.5)*.004,pulse:Math.random()*Math.PI*2,pixieTick:0});
+}
+function spawnPixie(x,y){for(let i=0;i<3;i++){heavenPixies.push({x:x+(Math.random()-.5)*20,y:y+(Math.random()-.5)*20,vx:(Math.random()-.5)*1.1,vy:-.3-Math.random()*.7,life:1,size:1.8+Math.random()*2,hue:40+Math.random()*28});}}
+function drawHeavenNote(n){
+  n.pulse+=.028;const gs=1+Math.sin(n.pulse)*.07;const wx=n.x+Math.sin(n.wobble)*n.wobbleAmp;
+  n.pixieTick++;if(n.pixieTick%5===0)spawnPixie(wx,n.y);
+  ctx.save();ctx.translate(wx,n.y);ctx.rotate(n.rotation);ctx.scale(gs,gs);
+  const og=ctx.createRadialGradient(0,0,4,0,0,58);og.addColorStop(0,"rgba(255,225,80,0.32)");og.addColorStop(.5,"rgba(255,180,30,0.1)");og.addColorStop(1,"rgba(255,140,0,0)");ctx.fillStyle=og;ctx.beginPath();ctx.arc(0,0,58,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.globalAlpha=.1+Math.sin(n.pulse)*.05;
+  for(let r=0;r<8;r++){ctx.fillStyle="#ffe070";ctx.beginPath();const ra=r/8*Math.PI*2+n.pulse*.18;ctx.moveTo(0,0);ctx.lineTo(Math.cos(ra)*62,Math.sin(ra)*62);ctx.lineTo(Math.cos(ra+.1)*62,Math.sin(ra+.1)*62);ctx.closePath();ctx.fill();}
+  ctx.restore();
+  const w=54,h=40,rv=10;ctx.shadowColor="#ffd700";ctx.shadowBlur=24;
+  ctx.fillStyle="rgba(18,13,2,0.96)";ctx.strokeStyle="rgba(255,215,60,0.94)";ctx.lineWidth=1.8;
+  ctx.beginPath();ctx.roundRect(-w/2,-h/2,w,h,rv);ctx.fill();ctx.stroke();ctx.shadowBlur=0;
+  const ig=ctx.createLinearGradient(-w/2,-h/2,w/2,h/2);ig.addColorStop(0,"rgba(255,225,80,0.07)");ig.addColorStop(1,"rgba(255,180,20,0.03)");ctx.fillStyle=ig;ctx.beginPath();ctx.roundRect(-w/2,-h/2,w,h,rv);ctx.fill();
+  ctx.strokeStyle="rgba(255,215,60,0.38)";ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(-w/2,-h/2);ctx.lineTo(0,4);ctx.lineTo(w/2,-h/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-w/2,h/2);ctx.lineTo(0,4);ctx.lineTo(w/2,h/2);ctx.stroke();
+  ctx.font="17px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.shadowColor="#ffd700";ctx.shadowBlur=14;ctx.fillText("✉️",0,5);ctx.shadowBlur=0;
+  for(let k=0;k<4;k++){const sa=n.pulse*1.2+k*1.57,sr=36+Math.sin(n.pulse+k)*4,alpha=.48+Math.sin(n.pulse*2+k)*.38;ctx.fillStyle=`rgba(255,232,100,${alpha})`;ctx.font="8px serif";ctx.fillText("✦",Math.cos(sa)*sr,Math.sin(sa)*sr);}
+  ctx.restore();n._sx=wx;n._sy=n.y;
+}
+function updatePixies(){
+  heavenPixies=heavenPixies.filter(p=>p.life>0);
+  heavenPixies.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy-=.01;p.life-=.024;ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=`hsl(${p.hue},100%,76%)`;ctx.shadowColor=`hsl(${p.hue},100%,66%)`;ctx.shadowBlur=8;const pr=Math.max(0,p.size*p.life);ctx.beginPath();ctx.arc(p.x,p.y,pr,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1;});
+}
+
+// ══════════════════════════════════════════════════
+//  MESSAGE IN A BOTTLE
+// ══════════════════════════════════════════════════
+let bottles=[];
+let bottleSpawnedThisSession=false;
+function spawnBottle(){
+  if(bottleSpawnedThisSession)return;
+  bottleSpawnedThisSession=true;
+  bottles.push({x:80+Math.random()*(canvas.width-160),y:-70,speed:.13+Math.random()*.08,wobble:Math.random()*Math.PI*2,wobbleSpeed:.008,wobbleAmp:10+Math.random()*12,pulse:Math.random()*Math.PI*2,rotation:(Math.random()-.5)*.1,rotSpeed:(Math.random()-.5)*.003});
+}
+function drawBottle(b){
+  b.pulse+=.025;const gs=1+Math.sin(b.pulse)*.06;const wx=b.x+Math.sin(b.wobble)*b.wobbleAmp;
+  ctx.save();ctx.translate(wx,b.y);ctx.rotate(b.rotation);ctx.scale(gs,gs);
+  const og=ctx.createRadialGradient(0,0,4,0,0,52);og.addColorStop(0,"rgba(80,220,200,0.28)");og.addColorStop(1,"rgba(30,180,160,0)");ctx.fillStyle=og;ctx.beginPath();ctx.arc(0,0,52,0,Math.PI*2);ctx.fill();
+  ctx.shadowColor="#40ddc0";ctx.shadowBlur=18;
+  ctx.font="32px serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText("🍾",0,0);
+  ctx.shadowBlur=0;
+  // Label
+  ctx.fillStyle="rgba(255,255,255,0.7)";ctx.font="bold 7px sans-serif";ctx.fillText("💌",0,6);
+  for(let k=0;k<4;k++){const sa=b.pulse+k*1.57,sr=28+Math.sin(b.pulse+k)*3;ctx.fillStyle=`rgba(80,220,200,${.3+Math.sin(b.pulse+k)*.25})`;ctx.beginPath();ctx.arc(Math.cos(sa)*sr,Math.sin(sa)*sr,2,0,Math.PI*2);ctx.fill();}
+  ctx.restore();b._sx=wx;b._sy=b.y;
+}
+
+// ══════════════════════════════════════════════════
+//  PARTICLES & TRAIL
+// ══════════════════════════════════════════════════
+let particles=[];
+function burst(x,y,color,count=12,big=false){for(let i=0;i<count;i++){const a=(i/count)*Math.PI*2,sp=big?2.2+Math.random()*4:1.5+Math.random()*2.5;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,color,size:big?3+Math.random()*5:2+Math.random()*4});}}
+function burstGold(x,y,count=25){for(let i=0;i<count;i++){const a=(i/count)*Math.PI*2,sp=1.8+Math.random()*4;particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:1,color:`hsl(${42+Math.random()*18},100%,70%)`,size:2+Math.random()*5});}}
+function updateParticles(){particles=particles.filter(p=>p.life>0);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.life-=.024;ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=6;const pr=Math.max(0,p.size*p.life);ctx.beginPath();ctx.arc(p.x,p.y,pr,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1;});}
+function addTrail(x,y){trail.push({x,y,life:1});if(trail.length>24)trail.shift();}
+function drawTrail(){const c=getCat();trail.forEach((p,i)=>{p.life-=.035;if(p.life<=0)return;ctx.globalAlpha=p.life*.26;ctx.fillStyle=c.glow||"rgba(200,150,255,0.8)";ctx.shadowColor=c.shadow||c.body;ctx.shadowBlur=7;const r=Math.max(0,(i/trail.length)*12*p.life);ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.globalAlpha=1;});}
+
+// ══════════════════════════════════════════════════
+//  MAIN LOOP
+// ══════════════════════════════════════════════════
+let lastSpawn=0,lastNoteTime=0,lastHeavenTime=0,lastBottleCheck=0,gameStartTime=null;
+const NOTE_INTERVAL=90000;    // love notes: ~90s
+const HEAVEN_INTERVAL=150000; // special notes: ~150s (harder)
+const BOTTLE_INTERVAL=180000; // bottle: once per 3min minimum
+
+function drawBg(){
+  ctx.fillStyle="#080c18";ctx.fillRect(0,0,canvas.width,canvas.height);
+  nebulas.forEach(n=>{n.x+=n.dx;n.y+=n.dy;if(n.x<-n.r*2)n.x=canvas.width+n.r;if(n.x>canvas.width+n.r*2)n.x=-n.r;const g=ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,n.r);g.addColorStop(0,`hsla(${n.hue},80%,60%,${n.alpha})`);g.addColorStop(1,"transparent");ctx.fillStyle=g;ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fill();});
+  bgStars.forEach(s=>{s.tw+=s.sp;ctx.globalAlpha=Math.max(0,.3+Math.sin(s.tw)*.5);ctx.fillStyle="#f0e8ff";ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
+  clouds.forEach(c=>{c.x+=c.speed;if(c.x-c.size*2>canvas.width)c.x=-c.size*2;drawCloud(c);});
+}
+
+function update(time){
+  drawBg();
+  if(!gameRunning){requestAnimationFrame(update);return;}
+  if(paused){requestAnimationFrame(update);return;}
+  if(!gameStartTime)gameStartTime=time;
+  const elapsed=time-gameStartTime;
+
+  // Trail + Cat
+  addTrail(cat.x,cat.y);drawTrail();
+  cat.floatOffset+=.022;
+  cat.y=canvas.height/2+Math.sin(cat.floatOffset)*14;
+  cat.x+=(mouseX-cat.x)*.055;
+  if(catShake>0)catShake-=.15;
+  drawCat(cat.x,cat.y,cat.size,catShake);
+
+  // Spawn candies
+  if(time-lastSpawn>spawnInterval){spawnCandy();lastSpawn=time;spawnInterval=Math.max(820,spawnInterval-2);}
+
+  // Finale mode timer
+  if(finaleMode){finaleModeTimer-=16;if(finaleModeTimer<=0)finaleMode=false;}
+
+  // Spawn love notes (~90s)
+  if(foundNotes.size<50){
+    if(lastNoteTime===0&&elapsed>22000){spawnWorldNote();lastNoteTime=time;}
+    else if(lastNoteTime>0&&time-lastNoteTime>NOTE_INTERVAL+(Math.random()-.5)*25000){spawnWorldNote();lastNoteTime=time;}
+  }
+  // Spawn heaven notes (~150s, first after 60s)
+  if(foundSpecial.size<25){
+    if(lastHeavenTime===0&&elapsed>60000){spawnHeavenNote();lastHeavenTime=time;}
+    else if(lastHeavenTime>0&&time-lastHeavenTime>HEAVEN_INTERVAL+(Math.random()-.5)*40000){spawnHeavenNote();lastHeavenTime=time;}
+  }
+  // Bottle: once per session, after 3 min, once score > 30
+  if(!bottleSpawnedThisSession&&elapsed>BOTTLE_INTERVAL&&score>30){spawnBottle();}
+
+  updatePixies();
+
+  // Candies
+  candies=candies.filter(c=>{
+    c.y+=c.speed;c.wobble+=c.wobbleSpeed;c.rotation+=c.rotSpeed;c.scale+=.003*c.scaleDir;if(c.scale>1.08||c.scale<0.92)c.scaleDir*=-1;
+    drawCandy(c);
+    const dx=c.x-cat.x,dy=c.y-cat.y;
+    if(Math.sqrt(dx*dx+dy*dy)<c.size+cat.size-8){
+      score++;streak++;if(streak>MAX_STREAK)streak=MAX_STREAK;
+      scoreEl.textContent=score;streakEl.textContent=streak;updatePips();showCombo(streak);
+      const fr=[880,1047,1175,1319];playChime(fr[Math.min(streak-1,3)]||880);
+      if(c.memory){memories++;memEl.textContent=memories;playMemoryChime();showMemoryCard();catShake=5;burst(cat.x,cat.y-cat.size,"#ffd6f5",22,true);showPopup("💙 Memory!",cat.x-40,cat.y-80,"#ffd6f5");}
+      else{const w=["Yum! 🍬","Sweet! ✨","Yay! 💙","Lovely! 💕","Mmm!"];showPopup(w[Math.floor(Math.random()*w.length)],cat.x-20,cat.y-70,"#aee6ff");burst(cat.x,cat.y-cat.size*.8,"#aee6ff",10);}
+      saveAll();return false;
+    }
+    if(c.y>canvas.height+30){streak=0;streakEl.textContent=0;updatePips();return false;}
+    return true;
+  });
+
+  // Love notes
+  worldNotes=worldNotes.filter(n=>{
+    n.y+=n.speed;n.wobble+=n.wobbleSpeed;n.rotation+=n.rotSpeed;drawWorldNote(n);
+    const dx=(n._sx||n.x)-cat.x,dy=n.y-cat.y;
+    if(Math.sqrt(dx*dx+dy*dy)<36+cat.size){
+      if(!foundNotes.has(n.noteIdx)){
+        foundNotes.add(n.noteIdx);noteCountEl.textContent=foundNotes.size;saveAll();
+        playNoteChime();catShake=9;burst(cat.x,cat.y-cat.size,"#ffb4e6",32,true);burst(cat.x,cat.y-cat.size*.5,"#ffd6f5",18,true);
+        showPopup("💌 Love Note!",cat.x-55,cat.y-90,"#ffb4e6");
+        setTimeout(()=>showNoteModal(n.noteIdx,"regular",true),700);
+        checkFinale();
+      }
+      return false;
+    }
+    if(n.y>canvas.height+60)return false;return true;
+  });
+
+  // Heaven notes
+  heavenNotes=heavenNotes.filter(n=>{
+    n.y+=n.speed;n.wobble+=n.wobbleSpeed;n.rotation+=n.rotSpeed;drawHeavenNote(n);
+    const dx=(n._sx||n.x)-cat.x,dy=n.y-cat.y;
+    if(Math.sqrt(dx*dx+dy*dy)<40+cat.size){
+      if(!foundSpecial.has(n.noteIdx)){
+        foundSpecial.add(n.noteIdx);specialCountEl.textContent=foundSpecial.size;saveAll();
+        playHeavenChime();catShake=12;burstGold(cat.x,cat.y-cat.size,35);burst(cat.x,cat.y-cat.size,"#fffde0",18,true);
+        showPopup("🌟 From Grandpa",cat.x-60,cat.y-95,"#ffd700");
+        setTimeout(()=>showNoteModal(n.noteIdx,"special",true),800);
+        checkFinale();
+      }
+      return false;
+    }
+    if(n.y>canvas.height+70)return false;return true;
+  });
+
+  // Bottles
+  bottles=bottles.filter(b=>{
+    b.y+=b.speed;b.wobble+=b.wobbleSpeed;b.rotation+=b.rotSpeed;drawBottle(b);
+    const dx=(b._sx||b.x)-cat.x,dy=b.y-cat.y;
+    if(Math.sqrt(dx*dx+dy*dy)<38+cat.size){
+      playChime(660,.1);playChime(880,.08);
+      burst(cat.x,cat.y-cat.size,"#40ddc0",20,true);
+      showPopup("💌 Message in a Bottle!",cat.x-85,cat.y-90,"rgba(80,220,200,1)");
+      setTimeout(()=>openBottleModal(),600);
+      return false;
+    }
+    if(b.y>canvas.height+80)return false;return true;
+  });
+
+  updateParticles();
+  requestAnimationFrame(update);
+}
+
+requestAnimationFrame(update);
+
+window.addEventListener("resize",()=>{
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  bgStars=Array.from({length:200},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5,tw:Math.random()*Math.PI*2,sp:.005+Math.random()*.012}));
+});
+
+// Service Worker registration for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('SW registered: ', registration);
+      })
+      .catch((registrationError) => {
+        console.log('SW registration failed: ', registrationError);
+      });
+  });
+}
+</script>
+</body>
+</html>
